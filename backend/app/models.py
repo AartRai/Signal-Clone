@@ -136,3 +136,14 @@ class MessageReaction(Base):
     # Relationships
     message = relationship("Message", back_populates="reactions")
     user = relationship("User", back_populates="reactions")
+
+class UserDeletedMessage(Base):
+    __tablename__ = "user_deleted_messages"
+    __table_args__ = (
+        UniqueConstraint("message_id", "user_id", name="uq_deleted_msg_user"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(Integer, ForeignKey("messages.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    deleted_at = Column(DateTime, default=datetime.datetime.utcnow)

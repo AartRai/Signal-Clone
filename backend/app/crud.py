@@ -196,10 +196,17 @@ def delete_expired_messages(db: Session):
             db.delete(msg)
         db.commit()
 
-def get_conversation_messages(db: Session, conversation_id: int, limit: int = 100) -> List[models.Message]:
+def get_conversation_messages(db: Session, conversation_id: int, user_id: int, limit: int = 100) -> List[models.Message]:
     delete_expired_messages(db)
+    
+    # Find messages the user has deleted for themselves
+    deleted_subquery = db.query(models.UserDeletedMessage.message_id).filter(
+        models.UserDeletedMessage.user_id == user_id
+    ).subquery()
+
     return db.query(models.Message).filter(
-        models.Message.conversation_id == conversation_id
+        models.Message.conversation_id == conversation_id,
+        ~models.Message.id.in_(deleted_subquery)
     ).order_by(models.Message.created_at).limit(limit).all()
 
 def create_message(db: Session, message: schemas.MessageCreate, sender_id: int) -> models.Message:
@@ -244,6 +251,19 @@ def delete_message(db: Session, message_id: int, user_id: int) -> bool:
     ).first()
     if msg:
         db.delete(msg)
+        db.commit()
+        return True
+    return False
+
+def delete_message_for_me(db: Session, message_id: int, user_id: int) -> bool:
+    """Marks a message as deleted for a specific user"""
+    exists = db.query(models.UserDeletedMessage).filter(
+        and_(models.UserDeletedMessage.message_id == message_id, models.UserDeletedMessage.user_id == user_id)
+    ).first()
+    
+    if not exists:
+        deleted_entry = models.UserDeletedMessage(message_id=message_id, user_id=user_id)
+        db.add(deleted_entry)
         db.commit()
         return True
     return False

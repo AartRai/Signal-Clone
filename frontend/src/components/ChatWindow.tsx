@@ -30,10 +30,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
     removeReaction,
     selectConversation,
     deleteMessage,
+    deleteMessageForMe,
   } = useSocket();
   const { info } = useToast();
 
   const [showReactionPickerId, setShowReactionPickerId] = useState<number | null>(null);
+  const [showDeleteMenuId, setShowDeleteMenuId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom
@@ -211,8 +213,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
                   {isMe && (
                     <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity duration-150">
                       <button
-                        onClick={() => deleteMessage(msg.id)}
-                        className="rounded-full bg-surface-3 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                        onClick={() => setShowDeleteMenuId(msg.id)}
+                        className="rounded-full bg-surface-3 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition relative"
                         title="Delete Message"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -244,7 +246,45 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
                       >
                         <Smile className="h-3.5 w-3.5" />
                       </button>
+                      <button
+                        onClick={() => setShowDeleteMenuId(msg.id)}
+                        className="rounded-full bg-surface-3 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                        title="Delete Message"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
+                  )}
+
+                  {/* Delete Menu Popover */}
+                  {showDeleteMenuId === msg.id && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setShowDeleteMenuId(null)}></div>
+                      <div className={`absolute bottom-full mb-1 z-40 flex flex-col bg-surface-2 border border-border rounded-lg shadow-xl overflow-hidden min-w-[140px] animate-in fade-in duration-100 ${
+                        isMe ? "right-0" : "left-0"
+                      }`}>
+                        <button
+                          onClick={() => {
+                            deleteMessageForMe(msg.id);
+                            setShowDeleteMenuId(null);
+                          }}
+                          className="px-4 py-2 text-sm text-left text-foreground hover:bg-surface-3 transition"
+                        >
+                          Delete for Me
+                        </button>
+                        {isMe && (
+                          <button
+                            onClick={() => {
+                              deleteMessage(msg.id);
+                              setShowDeleteMenuId(null);
+                            }}
+                            className="px-4 py-2 text-sm text-left text-red-500 hover:bg-red-500/10 transition"
+                          >
+                            Delete for Everyone
+                          </button>
+                        )}
+                      </div>
+                    </>
                   )}
 
                   {/* Reaction Picker Popover */}

@@ -23,6 +23,7 @@ interface SocketContextType {
   addReaction: (messageId: number, reaction: string) => Promise<void>;
   removeReaction: (messageId: number) => Promise<void>;
   deleteMessage: (messageId: number) => void;
+  deleteMessageForMe: (messageId: number) => void;
   addContact: (phoneOrUsername: string) => Promise<string | null>;
   createConversation: (isGroup: boolean, memberIds: number[], name?: string) => Promise<Conversation | null>;
 }
@@ -264,6 +265,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMessages((prev) => prev.filter((msg) => msg.id !== message_id));
           }
 
+        } else if (wsEvent === "message_deleted_for_me") {
+          const { message_id, conversation_id } = data;
+          const isCurrentActive = activeConversationIdRef.current === conversation_id;
+
+          if (isCurrentActive) {
+            setMessages((prev) => prev.filter((msg) => msg.id !== message_id));
+          }
+
         } else if (wsEvent === "new_conversation") {
           const newConv = data as Conversation;
           setConversations((prev) => {
@@ -477,6 +486,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socketRef.current.send(JSON.stringify(payload));
   };
 
+  // Sends a delete message for me event via WebSocket
+  const deleteMessageForMe = (messageId: number) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN || !activeConversationId) return;
+
+    const payload = {
+      event: "delete_message_for_me",
+      data: {
+        conversation_id: activeConversationId,
+        message_id: messageId,
+      }
+    };
+    socketRef.current.send(JSON.stringify(payload));
+  };
+
   const sendTyping = (isTyping: boolean) => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN || !activeConversationId) return;
 
@@ -586,6 +609,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         selectConversation,
         sendMessage,
         deleteMessage,
+        deleteMessageForMe,
         sendTyping,
         addReaction,
         removeReaction,

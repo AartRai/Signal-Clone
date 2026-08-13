@@ -185,6 +185,24 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
                                     },
                                     member_ids
                                 )
+                        
+                elif event == "delete_message_for_me":
+                    message_id = event_data.get("message_id")
+                    conversation_id = event_data.get("conversation_id")
+                    if message_id and conversation_id:
+                        with SessionLocal() as db:
+                            deleted = crud.delete_message_for_me(db, message_id, user_id)
+                            if deleted:
+                                await manager.send_personal_message(
+                                    {
+                                        "event": "message_deleted_for_me",
+                                        "data": {
+                                            "message_id": message_id,
+                                            "conversation_id": conversation_id
+                                        }
+                                    },
+                                    user_id
+                                )
                                 
             except json.JSONDecodeError:
                 logger.error("Failed to decode JSON from WebSocket payload")

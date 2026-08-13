@@ -49,7 +49,7 @@ def get_messages_for_conversation(
     if not is_member:
         raise HTTPException(status_code=403, detail="Not a member of this conversation")
         
-    return crud.get_conversation_messages(db, conversation_id=conversation_id)
+    return crud.get_conversation_messages(db, conversation_id=conversation_id, user_id=current_user.id)
 
 @router.post("/", response_model=schemas.MessageResponse)
 def send_rest_message(
