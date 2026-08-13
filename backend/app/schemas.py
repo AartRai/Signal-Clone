@@ -137,6 +137,7 @@ class ConversationResponse(BaseModel):
 class ConversationCreate(BaseModel):
     name: Optional[str] = None # Empty for direct chats
     is_group: bool = False
+    avatar_url: Optional[str] = None
     member_ids: List[int] # List of user IDs to include in the conversation
 
 class AddMemberRequest(BaseModel):

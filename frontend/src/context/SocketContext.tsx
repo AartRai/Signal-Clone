@@ -25,7 +25,7 @@ interface SocketContextType {
   deleteMessage: (messageId: number) => void;
   deleteMessageForMe: (messageId: number) => void;
   addContact: (phoneOrUsername: string) => Promise<string | null>;
-  createConversation: (isGroup: boolean, memberIds: number[], name?: string) => Promise<Conversation | null>;
+  createConversation: (isGroup: boolean, memberIds: number[], name?: string, avatarUrl?: string) => Promise<Conversation | null>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -147,7 +147,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMessages((prev) => {
               // Deduplicate just in case
               if (prev.some(m => m.id === newMsg.id)) return prev;
-              return [...prev, newMsg];
+              
+              // Remove any matching optimistic message
+              const filtered = prev.filter(m => !(m.id < 0 && m.content === newMsg.content && m.sender_id === newMsg.sender_id));
+              
+              return [...filtered, newMsg];
             });
             // Mark read on backend
             fetch(`${API_BASE}/conversations/${newMsg.conversation_id}/read`, {
@@ -469,6 +473,25 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       },
     };
 
+    // Optimistic UI update for 'sending' state
+    const optimisticMessage: any = {
+      id: -Date.now(), // temporary negative ID
+      conversation_id: activeConversationId,
+      sender_id: currentUser?.id || 0,
+      content,
+      message_type: payload.data.message_type,
+      attachment_url: attachmentUrl,
+      attachment_type: attachmentType,
+      reply_to_id: replyToId,
+      is_disappearing: isDisappearing,
+      disappear_after: disappearAfter,
+      created_at: new Date().toISOString(),
+      statuses: [{ user_id: 0, status: 'sending', updated_at: new Date().toISOString() }],
+      reactions: []
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     socketRef.current.send(JSON.stringify(payload));
   };
 
@@ -564,7 +587,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const createConversation = async (isGroup: boolean, memberIds: number[], name?: string): Promise<Conversation | null> => {
+  const createConversation = async (isGroup: boolean, memberIds: number[], name?: string, avatarUrl?: string): Promise<Conversation | null> => {
     if (!token) return null;
     try {
       const res = await fetch(`${API_BASE}/conversations/`, {
@@ -573,7 +596,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ is_group: isGroup, member_ids: memberIds, name }),
+        body: JSON.stringify({ is_group: isGroup, member_ids: memberIds, name, avatar_url: avatarUrl }),
       });
       if (res.ok) {
         const data = await res.json();

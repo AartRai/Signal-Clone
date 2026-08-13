@@ -106,7 +106,7 @@ def create_conversation(db: Session, conv: schemas.ConversationCreate) -> models
     db_conv = models.Conversation(
         name=conv.name,
         is_group=conv.is_group,
-        avatar_url=None
+        avatar_url=conv.avatar_url
     )
     db.add(db_conv)
     db.commit()

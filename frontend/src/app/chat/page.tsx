@@ -77,8 +77,8 @@ export default function ChatPage() {
     }
   };
 
-  const handleCreateGroup = async (name: string, memberIds: number[]) => {
-    await createConversation(true, memberIds, name);
+  const handleCreateGroup = async (name: string, memberIds: number[], avatarUrl?: string) => {
+    await createConversation(true, memberIds, name, avatarUrl);
   };
 
   // Group Details Modal actions

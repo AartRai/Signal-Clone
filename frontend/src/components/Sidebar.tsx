@@ -112,8 +112,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Header */}
       <div className="relative flex items-center justify-between px-4 py-3 bg-surface-2">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full overflow-hidden border border-border bg-surface-2">
-            <img src={currentUser.avatar_url || ""} alt={currentUser.display_name} />
+          <div className="relative h-10 w-10 rounded-full overflow-hidden bg-surface-3 border-2 border-surface-1 flex-shrink-0">
+            {currentUser.avatar_url ? (
+              <img src={currentUser.avatar_url} alt={currentUser.display_name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-sm">
+                {currentUser.display_name.substring(0, 2).toUpperCase()}
+              </div>
+            )}
           </div>
           <div>
             <div className="text-sm font-semibold truncate max-w-[120px]">{currentUser.display_name}</div>
@@ -235,8 +241,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleStartContactChat(contact)}
                 className="flex w-full items-center gap-3 px-4 py-3 hover:bg-surface-3/40 transition text-left"
               >
-                <div className="relative h-10 w-10 rounded-full overflow-hidden bg-surface-3 flex-shrink-0">
-                  <img src={contact.contact_user.avatar_url || ""} alt={contact.contact_user.display_name} />
+                <div className="relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-surface-3">
+                  {contact.contact_user.avatar_url ? (
+                    <img src={contact.contact_user.avatar_url} alt={contact.contact_user.display_name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-sm">
+                      {contact.contact_user.display_name.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                   {onlineUsers[contact.contact_user.id] && (
                     <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#161618] bg-green-500"></span>
                   )}
@@ -299,8 +311,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   {/* Avatar */}
-                  <div className="relative h-11 w-11 rounded-full overflow-hidden bg-surface-3 flex-shrink-0">
-                    <img src={avatarUrl} alt={chatName} />
+                  <div className="relative h-11 w-11 rounded-full overflow-hidden flex-shrink-0 bg-surface-3">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={chatName} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-sm">
+                        {chatName.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                     {!conv.is_group && isOnline && (
                       <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#161618] bg-green-500"></span>
                     )}

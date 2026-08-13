@@ -127,7 +127,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="h-10 w-10 rounded-full overflow-hidden bg-surface-3 border border-border">
-            <img src={avatarUrl} alt={chatName} />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={chatName} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-sm">
+                {chatName.substring(0, 2).toUpperCase()}
+              </div>
+            )}
           </div>
           <div>
             <div className="text-sm font-semibold text-foreground">{chatName}</div>
@@ -378,20 +384,27 @@ const MessageBubble: React.FC<BubbleProps> = ({
     if (!isMe) return null;
 
     // Find statuses that are NOT 'sending'
-    const stats = message.statuses;
+    const stats = message.statuses || [];
+    
+    // Check for optimistic 'sending' state
+    const isSending = stats.some(s => s.status === 'sending');
+    if (isSending) {
+      return <Clock className="h-3 w-3 text-white/60" />;
+    }
+
     if (stats.length === 0) {
-      return <Check className="h-3 w-3 text-text-secondary" />; // Single grey check
+      return <Check className="h-3.5 w-3.5 text-white/60" />; // Single grey/white check
     }
 
     const isAllRead = stats.every((s) => s.status === "read");
     const isAnyDelivered = stats.some((s) => s.status === "delivered" || s.status === "read");
 
     if (isAllRead) {
-      return <CheckCheck className="h-3 w-3 text-blue-500" />; // Double blue checks
+      return <CheckCheck className="h-3.5 w-3.5 text-sky-300 drop-shadow-sm" />; // Double bright blue checks
     } else if (isAnyDelivered) {
-      return <CheckCheck className="h-3 w-3 text-text-secondary" />; // Double grey checks
+      return <CheckCheck className="h-3.5 w-3.5 text-white/60" />; // Double grey/white checks
     } else {
-      return <Check className="h-3 w-3 text-text-secondary" />; // Single grey check
+      return <Check className="h-3.5 w-3.5 text-white/60" />; // Single grey/white check
     }
   };
 

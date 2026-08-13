@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useTheme } from "next-themes";
 import { User, Contact, Conversation } from "../types";
-import { X, Plus, Shield, UserMinus } from "lucide-react";
+import { X, Plus, Shield, UserMinus, Camera } from "lucide-react";
 
 interface ProfileSettingsModalProps {
   user: User;
@@ -325,7 +325,7 @@ interface CreateGroupModalProps {
   contacts: Contact[];
   isOpen: boolean;
   onClose: () => void;
-  onCreateGroup: (name: string, memberIds: number[]) => Promise<void>;
+  onCreateGroup: (name: string, memberIds: number[], avatarUrl?: string) => Promise<void>;
 }
 
 // Renders the modal to create a new group conversation, allowing the user to pick members from contacts
@@ -338,8 +338,25 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [groupName, setGroupName] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image must be less than 5MB");
+        return;
+      }
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setAvatarPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleToggleContact = (id: number) => {
     setSelectedIds((prev) =>
@@ -352,10 +369,35 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     if (!groupName.trim() || selectedIds.length === 0) return;
 
     setLoading(true);
-    await onCreateGroup(groupName.trim(), selectedIds);
+    let avatarUrl: string | undefined = undefined;
+
+    if (avatarFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${apiUrl}/messages/upload`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("signal_token")}` },
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          avatarUrl = data.url;
+        }
+      } catch (err) {
+        console.error("Failed to upload avatar", err);
+      }
+    }
+
+    await onCreateGroup(groupName.trim(), selectedIds, avatarUrl);
     setLoading(false);
     setGroupName("");
     setSelectedIds([]);
+    setAvatarFile(null);
+    setAvatarPreview(null);
     onClose();
   };
 
@@ -385,6 +427,41 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </div>
 
           <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Group Avatar (Optional)
+            </label>
+            <div className="flex items-center gap-4">
+              <div 
+                className="h-14 w-14 rounded-full bg-surface-1 border border-border overflow-hidden flex items-center justify-center cursor-pointer hover:border-blue-500 transition group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
+                ) : (
+                  <Camera className="h-6 w-6 text-text-secondary group-hover:text-blue-500 transition" />
+                )}
+              </div>
+              <div className="text-sm text-text-secondary">
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-blue-400 hover:text-blue-300 font-medium"
+                >
+                  Choose Image
+                </button>
+                <div className="text-xs mt-0.5">JPEG, PNG, GIF up to 5MB</div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary block mb-1">
               Select Members ({selectedIds.length} selected)
             </label>
@@ -403,8 +480,14 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                       onChange={() => handleToggleContact(c.contact_user.id)}
                       className="h-4.5 w-4.5 rounded border-border text-blue-500 bg-surface-2 focus:ring-0 focus:ring-offset-0"
                     />
-                    <div className="h-8 w-8 rounded-full overflow-hidden bg-surface-3">
-                      <img src={c.contact_user.avatar_url || ""} alt={c.contact_user.display_name} />
+                    <div className="h-8 w-8 rounded-full overflow-hidden bg-surface-3 flex-shrink-0">
+                      {c.contact_user.avatar_url ? (
+                        <img src={c.contact_user.avatar_url} alt={c.contact_user.display_name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-xs">
+                          {c.contact_user.display_name.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 text-sm font-medium">{c.contact_user.display_name}</div>
                   </label>
@@ -510,8 +593,14 @@ export const GroupDetailsModal: React.FC<GroupDetailsModalProps> = ({
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 px-4 py-3 justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full overflow-hidden bg-surface-3">
-                        <img src={m.user.avatar_url || ""} alt={m.user.display_name} />
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-surface-3 flex-shrink-0">
+                        {m.user.avatar_url ? (
+                          <img src={m.user.avatar_url} alt={m.user.display_name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-blue-500 text-white font-bold text-xs">
+                            {m.user.display_name.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="text-sm font-medium">
