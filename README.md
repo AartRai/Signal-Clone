@@ -1,6 +1,11 @@
 # Signal Clone
 
+**Live Demo:** [https://signal-clone-lake.vercel.app](https://signal-clone-lake.vercel.app)
+
 A real-time, secure messaging platform clone built with a modern tech stack. Features include direct and group messaging, disappearing messages, file attachments, and real-time read receipts.
+
+## Features Showcase
+![Signal Clone Demo](./demo.webp)
 
 ## Architecture Overview
 
