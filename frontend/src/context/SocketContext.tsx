@@ -22,6 +22,7 @@ interface SocketContextType {
   sendTyping: (isTyping: boolean) => void;
   addReaction: (messageId: number, reaction: string) => Promise<void>;
   removeReaction: (messageId: number) => Promise<void>;
+  deleteMessage: (messageId: number) => void;
   addContact: (phoneOrUsername: string) => Promise<string | null>;
   createConversation: (isGroup: boolean, memberIds: number[], name?: string) => Promise<Conversation | null>;
 }
@@ -96,7 +97,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (res.ok) {
         const data = await res.json();
         setContacts(data);
-        
+
         // Build initial online users list
         const initialPresence: Record<number, boolean> = {};
         data.forEach((c: Contact) => {
@@ -176,14 +177,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         } else if (wsEvent === "typing") {
           const { conversation_id, user_id, is_typing } = data;
-          
+
           setTypingState((prev) => {
             const convState = prev[conversation_id] || {};
             if (is_typing) {
               // Find user display name
               const name = conversationsRef.current.find(c => c.id === conversation_id)
                 ?.members.find(m => m.user_id === user_id)?.user.display_name || "Someone";
-              
+
               return {
                 ...prev,
                 [conversation_id]: {
@@ -219,7 +220,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else if (wsEvent === "presence") {
           const { user_id, is_online } = data;
           setOnlineUsers((prev) => ({ ...prev, [user_id]: is_online }));
-          
+
           // Also update conversation members presence in the conversations array
           setConversations((prev) =>
             prev.map((conv) => {
@@ -253,6 +254,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 return msg;
               })
             );
+          }
+
+        } else if (wsEvent === "message_deleted") {
+          const { message_id, conversation_id } = data;
+          const isCurrentActive = activeConversationIdRef.current === conversation_id;
+
+          if (isCurrentActive) {
+            setMessages((prev) => prev.filter((msg) => msg.id !== message_id));
           }
 
         } else if (wsEvent === "new_conversation") {
@@ -302,7 +311,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const convState = typingState[cid] || {};
       const activeTypists: string[] = [];
       const now = Date.now();
-      
+
       Object.keys(convState).forEach((uidStr) => {
         const uid = parseInt(uidStr);
         const state = convState[uid];
@@ -392,7 +401,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     if (!token) return;
     setActiveConversationId(conversationId);
-    
+
     // Clear unread count locally
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unread_count: 0 } : c))
@@ -407,13 +416,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const data = await res.json();
         setMessages(data);
       }
-      
+
       // Update read receipt on server
       await fetch(`${API_BASE}/conversations/${conversationId}/read`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       // Send WS read event
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({
@@ -436,7 +445,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     attachmentType: string | null = null
   ) => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN || !activeConversationId) return;
-    
+
     const payload = {
       event: "send_message",
       data: {
@@ -450,13 +459,27 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         message_type: attachmentUrl ? "attachment" : "text"
       },
     };
-    
+
+    socketRef.current.send(JSON.stringify(payload));
+  };
+
+  // Sends a delete message event via WebSocket
+  const deleteMessage = (messageId: number) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN || !activeConversationId) return;
+
+    const payload = {
+      event: "delete_message",
+      data: {
+        conversation_id: activeConversationId,
+        message_id: messageId,
+      }
+    };
     socketRef.current.send(JSON.stringify(payload));
   };
 
   const sendTyping = (isTyping: boolean) => {
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN || !activeConversationId) return;
-    
+
     socketRef.current.send(JSON.stringify({
       event: "typing",
       data: {
@@ -509,7 +532,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const err = await res.json();
         return err.detail || "Failed to add contact";
       }
-      
+
       // Reload contacts
       await loadContacts(token);
       return null; // success
@@ -562,6 +585,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         logout,
         selectConversation,
         sendMessage,
+        deleteMessage,
         sendTyping,
         addReaction,
         removeReaction,

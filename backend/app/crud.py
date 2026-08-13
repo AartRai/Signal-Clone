@@ -237,6 +237,17 @@ def create_message(db: Session, message: schemas.MessageCreate, sender_id: int) 
     db.refresh(db_msg)
     return db_msg
 
+def delete_message(db: Session, message_id: int, user_id: int) -> bool:
+    """Deletes a message if the user is the sender"""
+    msg = db.query(models.Message).filter(
+        and_(models.Message.id == message_id, models.Message.sender_id == user_id)
+    ).first()
+    if msg:
+        db.delete(msg)
+        db.commit()
+        return True
+    return False
+
 def mark_conversation_as_read(db: Session, conversation_id: int, user_id: int):
     # Find all messages in conversation where this user has status != 'read' and update to 'read'
     subquery = db.query(models.Message.id).filter(models.Message.conversation_id == conversation_id).subquery()

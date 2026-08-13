@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSocket } from "@/context/SocketContext";
 import { useToast } from "@/context/ToastContext";
 import { Message, User } from "@/types";
-import { Phone, Video, Info, ArrowLeft, Smile, Check, CheckCheck, Clock, Paperclip, Lock } from "lucide-react";
+import { Phone, Video, Info, ArrowLeft, Smile, Check, CheckCheck, Clock, Paperclip, Lock, Trash2 } from "lucide-react";
 
 interface ChatWindowProps {
   onOpenDetails: () => void;
@@ -29,6 +29,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
     addReaction,
     removeReaction,
     selectConversation,
+    deleteMessage,
   } = useSocket();
   const { info } = useToast();
 
@@ -209,6 +210,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onOpenDetails }) => {
                   {/* Left-side action triggers for hover */}
                   {isMe && (
                     <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity duration-150">
+                      <button
+                        onClick={() => deleteMessage(msg.id)}
+                        className="rounded-full bg-surface-3 p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                        title="Delete Message"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                       <button
                         onClick={() => setShowReactionPickerId(msg.id)}
                         className="rounded-full bg-surface-3 p-1.5 text-text-secondary hover:text-foreground transition"

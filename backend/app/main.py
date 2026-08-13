@@ -1,6 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi.staticfiles import StaticFiles
+import os
 import json
 import logging
 
@@ -22,6 +24,9 @@ try:
 finally:
     db.close()
 
+# Ensure uploads directory exists
+os.makedirs("uploads", exist_ok=True)
+
 # Main FastAPI application instance
 app = FastAPI(title="Signal Clone API", version="1.0.0")
 
@@ -33,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files for uploads
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Mount REST routers
 app.include_router(auth.router)
@@ -157,6 +165,27 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
                             member_ids
                         )
                         
+                elif event == "delete_message":
+                    message_id = event_data.get("message_id")
+                    conversation_id = event_data.get("conversation_id")
+                    if message_id and conversation_id:
+                        with SessionLocal() as db:
+                            deleted = crud.delete_message(db, message_id, user_id)
+                            if deleted:
+                                conv = crud.get_conversation(db, conversation_id)
+                                member_ids = [m.user_id for m in conv.members] if conv else [user_id]
+                                
+                                await manager.broadcast_to_users(
+                                    {
+                                        "event": "message_deleted",
+                                        "data": {
+                                            "message_id": message_id,
+                                            "conversation_id": conversation_id
+                                        }
+                                    },
+                                    member_ids
+                                )
+                                
             except json.JSONDecodeError:
                 logger.error("Failed to decode JSON from WebSocket payload")
             except Exception as e:

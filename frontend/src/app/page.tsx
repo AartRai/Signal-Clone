@@ -18,11 +18,11 @@ export default function Home() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
-  
+
   // Registration fields
   const [displayName, setDisplayName] = useState("");
   const [selectedAvatarSeed, setSelectedAvatarSeed] = useState("signal");
-  
+
   // OTP stage
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState("");
@@ -87,7 +87,7 @@ export default function Home() {
       isPhone ? null : pendingIdentifier,
       otp
     );
-    
+
     setLoading(false);
     if (success) {
       router.push("/chat");
@@ -136,7 +136,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12 text-foreground">
       <div className="w-full max-w-md space-y-8 rounded-2xl border border-border bg-surface-2 p-8 shadow-2xl">
-        
+
         {/* Signal Branding Logo */}
         <div className="flex flex-col items-center space-y-2 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-blue-500/20">
@@ -153,21 +153,19 @@ export default function Home() {
           <div className="flex rounded-lg bg-surface-2 p-1">
             <button
               onClick={() => setMode("login")}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-                mode === "login"
+              className={`flex-1 rounded-md py-2 text-sm font-medium transition ${mode === "login"
                   ? "bg-primary text-white shadow"
                   : "text-text-secondary hover:text-neutral-200"
-              }`}
+                }`}
             >
               Sign In
             </button>
             <button
               onClick={() => setMode("register")}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-                mode === "register"
+              className={`flex-1 rounded-md py-2 text-sm font-medium transition ${mode === "register"
                   ? "bg-primary text-white shadow"
                   : "text-text-secondary hover:text-neutral-200"
-              }`}
+                }`}
             >
               Create Account
             </button>
@@ -272,7 +270,7 @@ export default function Home() {
             >
               {loading ? "Sending OTP..." : "Request Verification Code"}
             </button>
-            
+
             {/* Seed guide helper */}
             <div className="rounded-lg border border-border bg-surface-2/50 p-4 text-xs text-text-secondary space-y-1">
               <span className="font-semibold text-neutral-200">Tip:</span> Try logging in with one of the pre-seeded users:
@@ -298,9 +296,8 @@ export default function Home() {
                         key={seed}
                         type="button"
                         onClick={() => setSelectedAvatarSeed(seed)}
-                        className={`h-11 w-11 rounded-full overflow-hidden border-2 transition ${
-                          selectedAvatarSeed === seed ? "border-blue-500 scale-110" : "border-transparent opacity-60 hover:opacity-100"
-                        }`}
+                        className={`h-11 w-11 rounded-full overflow-hidden border-2 transition ${selectedAvatarSeed === seed ? "border-blue-500 scale-110" : "border-transparent opacity-60 hover:opacity-100"
+                          }`}
                       >
                         <img src={avatarUrl} alt={seed} className="h-full w-full object-cover" />
                       </button>

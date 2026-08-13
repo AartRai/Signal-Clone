@@ -5,8 +5,9 @@ import { useSocket } from "@/context/SocketContext";
 import { Smile, Send, Paperclip, Clock, X, Image as ImageIcon, Check } from "lucide-react";
 
 export const ChatInput: React.FC = () => {
-  const { sendMessage, sendTyping, activeConversation } = useSocket();
+  const { sendMessage, sendTyping, activeConversation, token } = useSocket();
   const [content, setContent] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   
   // Typing debounce timer
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -19,8 +20,8 @@ export const ChatInput: React.FC = () => {
     seconds: 30, // default 30s
   });
 
-  // Attachments settings (mocked/simulated)
-  const [attachment, setAttachment] = useState<{ name: string; type: string; base64: string } | null>(null);
+  // Attachments settings
+  const [attachment, setAttachment] = useState<{ name: string; type: string; file: File; base64: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -79,12 +80,42 @@ export const ChatInput: React.FC = () => {
   };
 
   // Sends the compiled message (text, attachment, disappearing config) via WebSocket
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Support empty text if we have an attachment, otherwise ignore
     const trimmedContent = content.trim();
     if (!trimmedContent && !attachment) return;
+
+    let attachmentUrl = null;
+
+    if (attachment) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", attachment.file);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${apiUrl}/messages/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          attachmentUrl = data.url;
+        } else {
+          console.error("File upload failed");
+        }
+      } catch (err) {
+        console.error("Error uploading file:", err);
+      } finally {
+        setIsUploading(false);
+      }
+    }
 
     // Call WebSocket send message with attachment payload
     sendMessage(
@@ -92,7 +123,7 @@ export const ChatInput: React.FC = () => {
       null, // replyToId
       disappearSetting.active,
       disappearSetting.active ? disappearSetting.seconds : null,
-      attachment?.base64 || null,
+      attachmentUrl,
       attachment?.type || null
     );
 
@@ -118,6 +149,7 @@ export const ChatInput: React.FC = () => {
         setAttachment({
           name: file.name,
           type: file.type,
+          file: file,
           base64: reader.result as string
         });
       };
@@ -176,35 +208,34 @@ export const ChatInput: React.FC = () => {
       )}
 
       {/* Main Input Controls */}
-      <form onSubmit={handleFormSubmit} className="flex items-center gap-3">
-        {/* Hidden File Input */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-        />
+      <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          className="p-2 text-text-secondary hover:text-foreground transition rounded-full hover:bg-surface-3"
+        >
+          <Smile className="h-6 w-6" />
+        </button>
 
-        {/* Paperclip Button */}
         <button
           type="button"
           onClick={triggerAttachment}
-          className="rounded-full p-2.5 text-text-secondary hover:bg-surface-3 hover:text-foreground transition flex-shrink-0"
-          title="Add Attachment"
+          className="p-2 text-text-secondary hover:text-foreground transition rounded-full hover:bg-surface-3"
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="h-6 w-6" />
         </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          onChange={handleFileChange}
+          accept="image/*,video/*,application/pdf,.doc,.docx"
+        />
 
-        {/* Text Input wrapper */}
-        <div className="flex-1 bg-surface-2 border border-border rounded-full flex items-center px-4 py-1.5 focus-within:border-blue-500 transition relative">
+        <div className="flex-1 bg-surface-3 rounded-2xl flex items-center px-4 relative">
           <input
             ref={inputRef}
             type="text"
-            placeholder={
-              disappearSetting.active
-                ? `Disappearing message active (${displayDisappearLabel()})...`
-                : "New message"
-            }
             value={content}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
@@ -299,10 +330,14 @@ export const ChatInput: React.FC = () => {
         {/* Submit Send Button */}
         <button
           type="submit"
-          disabled={!content.trim() && !attachment}
+          disabled={(!content.trim() && !attachment) || isUploading}
           className="rounded-full bg-primary hover:bg-blue-600 disabled:bg-surface-3 disabled:text-text-secondary text-white p-2.5 shadow-md shadow-blue-500/10 transition flex-shrink-0"
         >
-          <Send className="h-5 w-5" />
+          {isUploading ? (
+            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Send className="h-5 w-5" />
+          )}
         </button>
       </form>
     </div>

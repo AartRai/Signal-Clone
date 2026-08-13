@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from sqlalchemy.orm import Session
 from typing import List
+import os
+import uuid
+import shutil
 
 from ..database import get_db
 from .. import crud, schemas, models
@@ -9,6 +12,27 @@ from ..websocket_manager import manager
 
 # Messages Router: Handles REST fallback for retrieving message history and adding reactions
 router = APIRouter(prefix="/messages", tags=["messages"])
+
+@router.post("/upload")
+async def upload_file(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Generate a unique filename to prevent collisions
+    file_ext = os.path.splitext(file.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join("uploads", unique_filename)
+    
+    # Save the file to the uploads directory
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # Return the full URL
+    base_url = str(request.base_url).rstrip('/')
+    # If the app is behind a proxy (like Render) we usually get https, but let's just construct it
+    # We can rely on request.base_url which FastAPI handles well
+    return {"url": f"{base_url}/uploads/{unique_filename}"}
 
 @router.get("/conversation/{conversation_id}", response_model=List[schemas.MessageResponse])
 def get_messages_for_conversation(

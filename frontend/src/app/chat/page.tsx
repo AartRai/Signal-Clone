@@ -59,7 +59,7 @@ export default function ChatPage() {
       await fetch("http://localhost:8000/auth/me", {
         // Alternatively, we can use user endpoint in auth.py
       });
-      
+
       // Let's implement actual profile update REST patch to auth
       await fetch("http://localhost:8000/auth/me", {
         // Wait, auth.py has no profile update route, but we can write a simple endpoint or just patch locally in localStorage.
