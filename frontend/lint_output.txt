@@ -1,0 +1,109 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+/Users/deepakrai/Desktop/Scalar/frontend/scratch_replace.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/app/chat/page.tsx
+  24:5   warning  'addReaction' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  54:13  warning  'res' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  58:13  warning  'updateRes' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  63:13  warning  'profileRes' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/app/page.tsx
+   14:11  warning  'toast' is assigned a value but never used                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   64:19  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  170:19  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  291:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/components/ChatInput.tsx
+  50:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/components/ChatInput.tsx:50:5
+  48 |   useEffect(() => {
+  49 |     // Reset inputs when active conversation changes
+> 50 |     setContent("");
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  51 |     setAttachment(null);
+  52 |     if (isTypingRef.current) {
+  53 |       sendTyping(false);  react-hooks/set-state-in-effect
+  56:6  warning  React Hook useEffect has a missing dependency: 'sendTyping'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/components/ChatWindow.tsx
+    6:25  warning  'Conversation' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    7:41  warning  'Shield' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    7:56  warning  'Reply' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   30:5   warning  'sendMessage' is assigned a value but never used                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   35:10  warning  'replyMessage' is assigned a value but never used                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   35:24  warning  'setReplyMessage' is assigned a value but never used                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  127:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  298:3   warning  'currentUser' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  390:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/components/Modals.tsx
+    4:13  warning  'Search' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    4:27  warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   88:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  114:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  404:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  510:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/components/Sidebar.tsx
+    6:10  warning  'Conversation' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    7:55  warning  'MessageSquare' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  115:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  238:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  266:19  error    'isTyping' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                      prefer-const
+  302:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/context/SocketContext.tsx
+   45:11  warning  'toast' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   63:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/context/SocketContext.tsx:63:7
+  61 |     const savedUser = localStorage.getItem("signal_user");
+  62 |     if (savedToken && savedUser) {
+> 63 |       setToken(savedToken);
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  64 |       const parsedUser = JSON.parse(savedUser) as User;
+  65 |       setCurrentUser(parsedUser);
+  66 |     }  react-hooks/set-state-in-effect
+  293:6   warning  React Hook useEffect has a missing dependency: 'currentUser'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  316:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/deepakrai/Desktop/Scalar/frontend/src/context/SocketContext.tsx:316:5
+  314 |       }
+  315 |     });
+> 316 |     setTypingUsers(nextTyping);
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  317 |   }, [typingState]);
+  318 |
+  319 |   // --- ACTIONS ---                                                                                                                      react-hooks/set-state-in-effect
+  338:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  363:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  513:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+✖ 40 problems (10 errors, 30 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
