@@ -30,8 +30,8 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
-const API_BASE = "http://localhost:8000";
-const WS_BASE = "ws://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const WS_BASE = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
 
 // The SocketProvider acts as the central state manager for the frontend, handling REST API calls,
 // real-time WebSocket events, and global application state (currentUser, messages, etc).

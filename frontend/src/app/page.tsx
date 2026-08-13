@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSocket } from "@/context/SocketContext";
 import { useToast } from "@/context/ToastContext";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const AVATAR_SEEDS = ["signal", "alice", "bob", "charlie", "dana", "evan", "happy", "cool", "star"];
 
